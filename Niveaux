@@ -1,0 +1,54 @@
+# Système de niveau.
+#   - Envoie des messages
+#   - Commandes /level
+#   - Fonction de colorisation
+# ------------------------
+
+options:
+    noPerm: &cTu n'as pas le permission de faire cela #'
+
+# Avoir une couleure correspondant au niveau du joueur.
+function levelColoration(p: offline player) :: text:
+    if {TH::Niveau::%{_p}%} < 20:
+        return "&e"
+    else if {TH::Niveau::%{_p}%} < 40:
+        return "&a"
+    else if {TH::Niveau::%{_p}%} < 60:
+        return "&b"
+    else if {TH::Niveau::%{_p}%} < 80:
+        return "&c"
+    else if {TH::Niveau::%{_p}%} < 100:
+        return "&4"
+    else:
+        return "&5"
+
+# Définition des variables lors de la 1ères connection
+on join:
+    if {TH::FirstJoin::%player%} is not set:
+        set {TH::FirstJoin::%player%} to true
+        set {TH::Niveau::%player%} to 0
+
+# Envoyer les messages bien formattés
+on chat:
+    cancel event
+    loop all players:
+        if loop-player's world is player's world:
+            if {TH::Grade::%player%} is not set:
+                send "[%levelColoration(player)%%{TH::Niveau::%player%}%&f] &d%player% &b| > &f%message%" to loop-player
+            if {TH::Grade::%player%} is set:
+                send "[%levelColoration(player)%%{TH::Niveau::%player%}%&f] %{TH::Grade::%player%}%&f-&6%player% &b| > &f%message%" to loop-player
+
+# Commande pour afficher son niveau.
+command /level <offline player=%player%>:
+    aliases: lvl
+    trigger:
+        if arg-1 is not player:
+            if player has permission "level.seeOther":
+                if {TH::Niveau::%arg-1%} is not set:
+                    message "&cLe niveau de %arg-1% n'est pas définit. S'est il déjà connecté ?"
+                else:
+                    message "&aLe niveau de %arg-1% est %levelColoration(arg-1)%%{TH::Niveau::%arg-1%}%"
+            else:
+                message "{@noPerm}"
+        else:
+            message "&aTon niveau est %levelColoration(player)%%{TH::Niveau::%arg-1%}%"
